@@ -1,0 +1,57 @@
+name: Deploy to production
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    name: Compile and run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Execute Gradle build
+        run: ./gradlew build
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: application-jar
+          path: build/libs/gateway-0.0.1-SNAPSHOT.jar
+          if-no-files-found: error
+
+  build-docker-image:
+    name: Build docker image
+    needs:
+      - run-tests
+    uses: go-easy-dev/infra-scripts/.github/workflows/build-docker-image.yml@master
+    secrets:
+      SA_BUILDER_PRIVATE_KEY: ${{ secrets.SA_PRIVATE_KEY }}
+      INFRA_SCRIPTS_PAT: ${{ secrets.INFRA_SCRIPTS_PAT }}
+    with:
+      build_name: gateway
+      artifact_name: application-jar
+      artifact_path: build/libs
+
+  deploy-prod:
+    name: Deploy to production
+    needs:
+      - build-docker-image
+    uses: go-easy-dev/infra-scripts/.github/workflows/deploy.yml@master
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}
+      VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      INFRA_SCRIPTS_PAT: ${{ secrets.INFRA_SCRIPTS_PAT }}
+    with:
+      playbook_dir: ansible/deploy-all/
