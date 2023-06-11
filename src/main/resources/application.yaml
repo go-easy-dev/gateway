@@ -27,6 +27,9 @@ spring:
           filters:
             - CustomAuthorizationFilterFactory
 
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
 springdoc:
   api-docs:
     enabled: true
