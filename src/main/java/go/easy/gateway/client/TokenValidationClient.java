@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException;
 public class TokenValidationClient {
 
     private final WebClient webClient = WebClient.builder()
-            .baseUrl("http://localhost:8090")
+            .baseUrl("http://user-service:8080")
             .build();
 
     public boolean validateToken(ValidateTokenRequest request) throws ExecutionException, InterruptedException, TimeoutException {
