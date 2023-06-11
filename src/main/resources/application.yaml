@@ -5,11 +5,11 @@ spring:
     gateway:
       routes:
         - id: auth
-          uri: 172.18.0.4:8080
+          uri: http://172.18.0.4:8080
           predicates:
             - Path=/api/v1/auth/**
         - id: user-service
-          uri: 172.18.0.4:8080
+          uri: http://172.18.0.4:8080
           predicates:
             - Path=/api/v1/user/**
           filters:
